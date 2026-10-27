@@ -41,11 +41,11 @@ jobs:
       - name: Format check
         run: pnpm run format:check
 
-      - name: TypeScript typecheck
-        run: pnpm run typecheck
-
       - name: Build packages
         run: pnpm run build
+
+      - name: TypeScript typecheck
+        run: pnpm run typecheck
 
       - name: Run test suite
         run: pnpm test
