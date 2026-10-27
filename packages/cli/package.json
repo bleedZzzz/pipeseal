@@ -1,0 +1,36 @@
+{
+  "name": "pipeseal",
+  "version": "0.1.0",
+  "description": "TypeScript-native, deterministic data-pipeline verification runtime",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "pipeseal": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pipeseal/core": "workspace:*",
+    "commander": "^13.1.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "data-pipeline",
+    "verification",
+    "duckdb",
+    "sql",
+    "cli",
+    "data-quality"
+  ]
+}

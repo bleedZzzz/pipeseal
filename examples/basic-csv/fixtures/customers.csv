@@ -1,0 +1,6 @@
+id,name,email,created_at
+101,Alice Smith,alice@company.com,2026-01-15 08:30:00
+102,Bob Jones,bob@partner.org,2026-02-01 11:20:00
+103,,carol@client.net,2026-02-14 15:45:00
+104,David Wilson,david@domain.org,2026-03-01 09:10:00
+105,Eve Adams,eve@startup.io,2026-03-12 17:00:00

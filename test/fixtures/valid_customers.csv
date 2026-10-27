@@ -1,0 +1,6 @@
+id,name,email,created_at
+1,Alice Smith,alice@example.com,2026-01-01 10:00:00
+2,Bob Jones,bob@example.com,2026-01-02 11:30:00
+3,Carol White,carol@example.com,2026-01-03 14:15:00
+4,David Brown,david@example.com,2026-01-04 09:45:00
+5,Eve Davis,eve@example.com,2026-01-05 16:20:00

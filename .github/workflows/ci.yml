@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} (Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: DuckDB Native Binding Sanity Check
+        run: node -e "import('@duckdb/node-api').then(async m => { const inst = await m.DuckDBInstance.create(':memory:'); const conn = await inst.connect(); const res = await (await conn.run('SELECT 42 AS status')).getRows(); if (res[0][0] !== 42) throw new Error('DuckDB native test failed'); console.log('DuckDB native client initialized successfully on ' + process.platform); });"
+        working-directory: packages/core
+
+      - name: Format check
+        run: pnpm exec prettier --check "packages/**/*.ts" "docs/**/*.md"
+
+      - name: TypeScript typecheck
+        run: pnpm run typecheck
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Run test suite
+        run: pnpm test
+
+      - name: CLI Demonstration — Success Run
+        run: node packages/cli/dist/index.js verify examples/basic-csv/pipeseal.verify.yml
+
+      - name: CLI Demonstration — JSON Evidence Output
+        run: node packages/cli/dist/index.js verify examples/basic-csv/pipeseal.verify.yml --json

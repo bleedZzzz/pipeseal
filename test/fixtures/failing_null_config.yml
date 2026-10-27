@@ -1,0 +1,17 @@
+version: "1"
+name: "failing-null-verification"
+
+inputs:
+  - name: raw_customers
+    source: ./customers_with_nulls.csv
+    format: csv
+
+transformations:
+  - name: raw_passthrough
+    sql: |
+      SELECT id, name, email FROM raw_customers
+
+checks:
+  - type: not_null
+    name: "assert_no_null_ids"
+    columns: [id, name, email]

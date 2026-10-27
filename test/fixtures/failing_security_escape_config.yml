@@ -1,0 +1,16 @@
+version: "1"
+name: "security-escape-test"
+
+inputs:
+  - name: raw_customers
+    source: ./valid_customers.csv
+    format: csv
+
+transformations:
+  - name: escape_attempt
+    sql: |
+      SELECT * FROM read_csv_auto('package.json')
+
+checks:
+  - type: not_null
+    columns: [id]

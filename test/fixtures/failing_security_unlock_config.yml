@@ -1,0 +1,17 @@
+version: "1"
+name: "security-unlock-test"
+
+inputs:
+  - name: raw_customers
+    source: ./valid_customers.csv
+    format: csv
+
+transformations:
+  - name: unlock_attempt
+    sql: |
+      SET enable_external_access = true;
+      SELECT * FROM raw_customers;
+
+checks:
+  - type: not_null
+    columns: [id]

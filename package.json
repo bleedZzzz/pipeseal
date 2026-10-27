@@ -1,0 +1,22 @@
+{
+  "name": "pipeseal-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter \"./packages/*\" run build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --build --noEmit",
+    "format": "prettier --write \"packages/**/*.ts\" \"docs/**/*.md\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "@vitest/coverage-v8": "^3.2.7",
+    "prettier": "^3.5.2",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "packageManager": "pnpm@10.19.0"
+}

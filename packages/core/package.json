@@ -1,0 +1,40 @@
+{
+  "name": "@pipeseal/core",
+  "version": "0.1.0",
+  "description": "Core engine and verification checks for PipeSeal data pipeline verification",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "2.0.0-r.1",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "data-pipeline",
+    "verification",
+    "duckdb",
+    "sql",
+    "data-quality",
+    "ci"
+  ]
+}

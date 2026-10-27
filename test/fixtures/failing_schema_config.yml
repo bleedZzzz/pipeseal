@@ -1,0 +1,22 @@
+version: "1"
+name: "failing-schema-verification"
+
+inputs:
+  - name: raw_customers
+    source: ./valid_customers.csv
+    format: csv
+
+transformations:
+  - name: customer_subset
+    sql: |
+      SELECT id, name FROM raw_customers
+
+checks:
+  - type: schema
+    name: "expect_missing_and_mismatched"
+    expect:
+      columns:
+        - name: id
+          type: BOOLEAN
+        - name: tax_identifier
+          type: VARCHAR

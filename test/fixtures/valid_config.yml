@@ -1,0 +1,57 @@
+version: "1"
+name: "valid-customer-verification"
+
+inputs:
+  - name: raw_customers
+    source: ./valid_customers.csv
+    format: csv
+
+transformations:
+  - name: clean_customers
+    sql: |
+      SELECT
+        id,
+        LOWER(TRIM(email)) AS email,
+        name,
+        created_at
+      FROM raw_customers
+
+checks:
+  - type: schema
+    name: "schema_check"
+    expect:
+      columns:
+        - name: id
+          type: BIGINT
+          nullable: false
+        - name: email
+          type: VARCHAR
+          nullable: false
+        - name: name
+          type: VARCHAR
+          nullable: false
+
+  - type: not_null
+    name: "not_null_id_and_email"
+    columns: [id, email]
+
+  - type: unique
+    name: "unique_id"
+    columns: [id]
+
+  - type: custom_sql
+    name: "emails_contain_at_symbol"
+    sql: |
+      SELECT * FROM clean_customers
+      WHERE email NOT LIKE '%@%'
+    expect: zero_rows
+
+  - type: row_count
+    name: "row_count_within_bounds"
+    min: 5
+    max: 5
+
+  - type: output_match
+    name: "matches_expected_csv"
+    expected: ./expected_customers.csv
+    ordered: false

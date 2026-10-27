@@ -1,0 +1,59 @@
+version: "1"
+name: "customer-pipeline-verification"
+
+inputs:
+  - name: raw_customers
+    source: ./fixtures/customers.csv
+    format: csv
+
+transformations:
+  - name: clean_customers
+    sql: |
+      SELECT
+        id,
+        LOWER(TRIM(email)) AS email,
+        COALESCE(name, 'Anonymous') AS name,
+        created_at
+      FROM raw_customers
+      WHERE id IS NOT NULL
+
+checks:
+  - type: schema
+    name: "verify_clean_schema"
+    expect:
+      columns:
+        - name: id
+          type: BIGINT
+          nullable: false
+        - name: email
+          type: VARCHAR
+        - name: name
+          type: VARCHAR
+          nullable: false
+        - name: created_at
+          type: TIMESTAMP
+
+  - type: not_null
+    name: "id_and_name_required"
+    columns: [id, name]
+
+  - type: unique
+    name: "unique_customer_id"
+    columns: [id]
+
+  - type: custom_sql
+    name: "valid_email_syntax"
+    sql: |
+      SELECT * FROM clean_customers
+      WHERE email NOT LIKE '%@%'
+    expect: zero_rows
+
+  - type: row_count
+    name: "row_count_guard"
+    min: 1
+    max: 100
+
+  - type: output_match
+    name: "golden_record_match"
+    expected: ./fixtures/expected_customers.csv
+    ordered: false
