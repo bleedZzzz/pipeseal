@@ -1,6 +1,6 @@
 # PipeSeal — Roadmap
 
-> **Version:** 0.1.0-draft
+> **Version:** 0.1.0 (Released)
 > **Date:** 2026-10-28
 > **Note:** Versions and timelines are aspirational. Scope may change based on user feedback and research findings.
 

@@ -1,7 +1,7 @@
 # PipeSeal — Antigravity Agent Guidelines
 
 > **Project:** PipeSeal (`@pipeseal/core`, `pipeseal`)  
-> **Status:** Phase 1 Complete (Research & Planning). Awaiting approval before Phase 2 implementation.  
+> **Status:** v0.1.0 Released (GitHub Tag `v0.1.0`). Preparing for v0.2.0 (MCP Agent Integration).  
 > **Documentation:** All authoritative specifications reside in [`docs/`](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs).
 
 ---
