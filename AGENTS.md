@@ -38,3 +38,4 @@
 - [Test Strategy](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/TEST-STRATEGY.md) — Test pyramid, fixtures, and failure injection testing.
 - [Roadmap](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/ROADMAP.md) — Milestone planning (v0.1.0 MVP through future versions).
 - [Architecture Decision Records](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/decisions) — ADR-001 through ADR-005.
+- [Project Memory](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/MEMORY.md) — Comprehensive institutional knowledge, gotchas, release history, and v0.2.0 direction.
