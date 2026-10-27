@@ -81,4 +81,26 @@ describe('DuckDBEngine Lifecycle & Security', () => {
     // Directory should no longer exist
     await expect(stat(stagingDir)).rejects.toThrow();
   });
+
+  it('cancels running native query when timeout expires via connection.interrupt()', async () => {
+    engine = new DuckDBEngine({ defaultTimeoutMs: 100 });
+    await engine.initialize();
+
+    // Heavy recursive cartesian query that would run for seconds
+    const longRunningSql =
+      'WITH RECURSIVE t AS (SELECT 1 as n UNION ALL SELECT n + 1 FROM t WHERE n < 10000000) SELECT count(*) FROM t, t as t2';
+
+    const startTime = performance.now();
+    await expect(engine.runQuery(longRunningSql, 100)).rejects.toThrow(
+      /exceeded configured timeout|native execution interrupted/,
+    );
+
+    const elapsed = performance.now() - startTime;
+    // Native execution must be cancelled near 100ms, well below completion time
+    expect(elapsed).toBeLessThan(1500);
+
+    // Engine connection remains functional after interrupt
+    const healthCheck = await engine.runQuery('SELECT 100 AS status');
+    expect(healthCheck.rows[0]?.[0]).toBe(100);
+  });
 });

@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [20.x, 22.x]
+        node-version: [22.x, 24.x]
 
     steps:
       - name: Checkout repository
@@ -39,7 +39,7 @@ jobs:
         working-directory: packages/core
 
       - name: Format check
-        run: pnpm exec prettier --check "packages/**/*.ts" "docs/**/*.md"
+        run: pnpm run format:check
 
       - name: TypeScript typecheck
         run: pnpm run typecheck
@@ -55,3 +55,30 @@ jobs:
 
       - name: CLI Demonstration — JSON Evidence Output
         run: node packages/cli/dist/index.js verify examples/basic-csv/pipeseal.verify.yml --json
+
+  node-26-compat:
+    name: Node.js 26 Compatibility (Ubuntu)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Set up Node.js 26
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run test suite
+        run: |
+          pnpm run build
+          pnpm test

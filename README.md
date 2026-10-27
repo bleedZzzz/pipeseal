@@ -137,7 +137,10 @@ checks:
   - type: output_match
     name: "golden_record_match"
     expected: ./fixtures/expected_customers.csv
-    ordered: false
+    # Default is order-independent multiset bag comparison via SQL EXCEPT ALL.
+    # For deterministic ordered comparison, specify explicit ordering columns:
+    # ordered: true
+    # order_by: [id]
 ```
 
 ---

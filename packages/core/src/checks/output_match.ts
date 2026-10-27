@@ -129,7 +129,64 @@ export async function runOutputMatchCheck(
   const expectedCount = Number(expectedCountRes.rows[0]?.[0] ?? 0);
 
   // Scenario A: Ordered comparison
-  if (config.ordered) {
+  const isOrdered = Boolean(
+    config.ordered || (config.order_by && config.order_by.length > 0),
+  );
+
+  if (isOrdered) {
+    if (!config.order_by || config.order_by.length === 0) {
+      const durationMs = Math.round(performance.now() - startTime);
+      return {
+        name: checkName,
+        type: "output_match",
+        targetTable,
+        status: "fail",
+        durationMs,
+        details: { ordered: true, error: "missing_order_by" },
+        diagnostics:
+          "Deterministic ordered comparison requires explicit 'order_by' columns with tie-breakers. Specify 'order_by: [...]' or omit 'ordered' for multiset equality.",
+      };
+    }
+
+    // Validate that order_by columns exist in compared columns
+    const compareColLowerMap = new Map(
+      columnsToCompare.map((c) => [c.toLowerCase(), c]),
+    );
+    const primaryOrderClauses: string[] = [];
+    const orderedColsSet = new Set<string>();
+
+    for (const rawOrder of config.order_by) {
+      const parts = rawOrder.trim().split(/\s+/);
+      const colName = parts[0] ?? "";
+      const dir = parts[1]?.toUpperCase() === "DESC" ? "DESC" : "ASC";
+      const resolvedCol = compareColLowerMap.get(colName.toLowerCase());
+
+      if (!resolvedCol) {
+        const durationMs = Math.round(performance.now() - startTime);
+        return {
+          name: checkName,
+          type: "output_match",
+          targetTable,
+          status: "fail",
+          durationMs,
+          details: { ordered: true, invalidColumn: colName },
+          diagnostics: `Column '${colName}' specified in 'order_by' does not exist in compared columns: ${columnsToCompare.join(", ")}`,
+        };
+      }
+
+      orderedColsSet.add(resolvedCol.toLowerCase());
+      primaryOrderClauses.push(`"${resolvedCol}" ${dir} NULLS LAST`);
+    }
+
+    // Tie-breaking rule: append remaining compared columns to ensure total determinism
+    const tieBreakerClauses = columnsToCompare
+      .filter((c) => !orderedColsSet.has(c.toLowerCase()))
+      .map((c) => `"${c}" ASC NULLS LAST`);
+
+    const fullOrderBy = [...primaryOrderClauses, ...tieBreakerClauses].join(
+      ", ",
+    );
+
     if (actualCount !== expectedCount) {
       const durationMs = Math.round(performance.now() - startTime);
       return {
@@ -142,16 +199,17 @@ export async function runOutputMatchCheck(
           ordered: true,
           actualCount,
           expectedCount,
+          orderBy: config.order_by,
         },
         diagnostics: `Row count mismatch in ordered comparison: actual has ${actualCount} rows, expected has ${expectedCount} rows`,
       };
     }
 
     const actualRowsRes = await context.engine.runQuery(
-      `SELECT ${quotedCols} FROM "${targetTable}"`,
+      `SELECT ${quotedCols} FROM "${targetTable}" ORDER BY ${fullOrderBy}`,
     );
     const expectedRowsRes = await context.engine.runQuery(
-      `SELECT ${quotedCols} FROM "${expectedTable}"`,
+      `SELECT ${quotedCols} FROM "${expectedTable}" ORDER BY ${fullOrderBy}`,
     );
 
     let mismatchIndex = -1;
@@ -164,9 +222,19 @@ export async function runOutputMatchCheck(
 
       const matches = aRow.every((val, colIdx) => {
         const expVal = eRow[colIdx];
+        if (val === expVal) return true;
         if (val === null && expVal === null) return true;
-        if (val === null || expVal === null) return false;
-        return val === expVal;
+        if (
+          val === null ||
+          expVal === null ||
+          val === undefined ||
+          expVal === undefined
+        )
+          return false;
+        if (typeof val === "object" && typeof expVal === "object") {
+          return safeJsonStringify(val) === safeJsonStringify(expVal);
+        }
+        return false;
       });
 
       if (!matches) {
@@ -188,8 +256,9 @@ export async function runOutputMatchCheck(
         details: {
           ordered: true,
           mismatchRowIndex: mismatchIndex,
+          orderBy: config.order_by,
         },
-        diagnostics: `Ordered mismatch at row index ${mismatchIndex + 1}`,
+        diagnostics: `Ordered mismatch at sorted position ${mismatchIndex + 1}`,
         sampleFailures: [
           `Expected row: ${safeJsonStringify(expectedSample)}`,
           `Actual row:   ${safeJsonStringify(actualSample)}`,
@@ -207,6 +276,7 @@ export async function runOutputMatchCheck(
         ordered: true,
         matchedRows: actualCount,
         columns: columnsToCompare,
+        orderBy: config.order_by,
       },
     };
   }

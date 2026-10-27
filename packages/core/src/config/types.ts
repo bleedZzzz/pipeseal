@@ -101,14 +101,33 @@ export const RowCountCheckSchema = z
   );
 export type RowCountCheckConfig = z.infer<typeof RowCountCheckSchema>;
 
-export const OutputMatchCheckSchema = z.object({
-  type: z.literal("output_match"),
-  name: z.string().optional(),
-  target: z.string().optional(),
-  expected: z.string().min(1, { message: "expected fixture path is required" }),
-  ordered: z.boolean().optional(),
-  compare: z.array(z.string().min(1)).optional(),
-});
+export const OutputMatchCheckSchema = z
+  .object({
+    type: z.literal("output_match"),
+    name: z.string().optional(),
+    target: z.string().optional(),
+    expected: z
+      .string()
+      .min(1, { message: "expected fixture path is required" }),
+    ordered: z.boolean().optional(),
+    order_by: z.array(z.string().min(1)).min(1).optional(),
+    compare: z.array(z.string().min(1)).optional(),
+  })
+  .refine(
+    (data) => {
+      if (
+        data.ordered === true &&
+        (!data.order_by || data.order_by.length === 0)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        "Deterministic ordered comparison requires explicit 'order_by' columns. Specify 'order_by: [col1, ...]' with column names, or omit 'ordered' for multiset equality.",
+    },
+  );
 export type OutputMatchCheckConfig = z.infer<typeof OutputMatchCheckSchema>;
 
 export const CheckConfigSchema = z.union([

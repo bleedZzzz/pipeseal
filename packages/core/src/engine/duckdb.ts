@@ -162,6 +162,15 @@ export class DuckDBEngine implements ExecutionEngine {
           err,
         );
       }
+      if (err instanceof ExecutionError) {
+        throw err;
+      }
+      if (msg.includes("INTERRUPT") || msg.includes("Interrupted")) {
+        throw new ExecutionError(
+          `Transformation "${name}" execution was interrupted by timeout`,
+          err,
+        );
+      }
       throw new ExecutionError(
         `SQL error in transformation "${name}": ${msg}`,
         err,
@@ -207,10 +216,19 @@ export class DuckDBEngine implements ExecutionEngine {
         ),
       };
     } catch (err) {
+      if (err instanceof ExecutionError) {
+        throw err;
+      }
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("Permission Error") || msg.includes("locked")) {
         throw new SecurityError(
           `Security policy violation during query: ${msg}`,
+          err,
+        );
+      }
+      if (msg.includes("INTERRUPT") || msg.includes("Interrupted")) {
+        throw new ExecutionError(
+          `Assertion query execution was interrupted by timeout`,
           err,
         );
       }
@@ -257,11 +275,20 @@ export class DuckDBEngine implements ExecutionEngine {
     operationDescription: string,
   ): Promise<T> {
     let timer: NodeJS.Timeout | undefined;
+    let didTimeout = false;
+
     const timeoutPromise = new Promise<never>((_, reject) => {
       timer = setTimeout(() => {
+        didTimeout = true;
+        try {
+          // Native DuckDB query cancellation: signals C++ engine to abort execution
+          this.connection?.interrupt();
+        } catch {
+          // Ignore interrupt error if connection already closing
+        }
         reject(
           new ExecutionError(
-            `${operationDescription} exceeded configured timeout of ${timeoutMs}ms`,
+            `${operationDescription} exceeded configured timeout of ${timeoutMs}ms (native execution interrupted)`,
           ),
         );
       }, timeoutMs);
@@ -269,6 +296,21 @@ export class DuckDBEngine implements ExecutionEngine {
 
     try {
       return await Promise.race([promise, timeoutPromise]);
+    } catch (err) {
+      if (didTimeout) {
+        throw new ExecutionError(
+          `${operationDescription} exceeded configured timeout of ${timeoutMs}ms (native execution interrupted)`,
+          err,
+        );
+      }
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("INTERRUPT") || msg.includes("Interrupted")) {
+        throw new ExecutionError(
+          `${operationDescription} exceeded configured timeout of ${timeoutMs}ms (native execution interrupted)`,
+          err,
+        );
+      }
+      throw err;
     } finally {
       if (timer) clearTimeout(timer);
     }

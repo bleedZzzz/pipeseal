@@ -322,7 +322,7 @@ describe('Verification Checks Engine', () => {
       expect(result.status).toBe('pass');
     });
 
-    it('fails on permuted rows when ordered: true (order-dependent)', async () => {
+    it('rejects ordered comparison without explicit order_by columns', async () => {
       const actualPath = resolve(__dirname, '../fixtures/valid_customers.csv');
       const permutedPath = resolve(__dirname, '../fixtures/expected_customers_permuted.csv');
 
@@ -341,8 +341,33 @@ describe('Verification Checks Engine', () => {
       );
 
       expect(result.status).toBe('fail');
-      expect(result.diagnostics).toContain('Ordered mismatch at row index 1');
-      expect(result.sampleFailures).toBeDefined();
+      expect(result.diagnostics).toContain(
+        "Deterministic ordered comparison requires explicit 'order_by' columns with tie-breakers",
+      );
+    });
+
+    it('passes ordered comparison with explicit order_by and tie-breakers on matching data', async () => {
+      const actualPath = resolve(__dirname, '../fixtures/valid_customers.csv');
+      const expectedPath = resolve(__dirname, '../fixtures/expected_customers.csv');
+
+      await engine.loadFixture('actual_t', actualPath, 'csv');
+      await engine.loadFixture('expected_t', expectedPath, 'csv');
+      await engine.lockdown();
+
+      const expectedTables = new Map([[expectedPath, 'expected_t']]);
+      const result = await runOutputMatchCheck(
+        {
+          type: 'output_match',
+          expected: expectedPath,
+          ordered: true,
+          order_by: ['id'],
+        },
+        { engine, defaultTargetTable: 'actual_t', expectedTables },
+      );
+
+      expect(result.status).toBe('pass');
+      expect(result.details.ordered).toBe(true);
+      expect(result.details.matchedRows).toBe(5);
     });
 
     it('fails and extracts samples on value mismatch', async () => {
@@ -448,6 +473,71 @@ describe('Verification Checks Engine', () => {
       );
 
       expect(result.status).toBe('pass');
+    });
+
+    it('breaks ties deterministically when duplicate sort keys exist in order_by', async () => {
+      const dupesPath = resolve(__dirname, '../fixtures/customers_with_dupes.csv');
+
+      await engine.loadFixture('actual_t', dupesPath, 'csv');
+      await engine.loadFixture('expected_t', dupesPath, 'csv');
+      await engine.lockdown();
+
+      const expectedTables = new Map([[dupesPath, 'expected_t']]);
+      // All rows have same order_by key or duplicates; tie-breaker on remaining columns resolves exact positions
+      const result = await runOutputMatchCheck(
+        {
+          type: 'output_match',
+          expected: dupesPath,
+          ordered: true,
+          order_by: ['name'],
+        },
+        { engine, defaultTargetTable: 'actual_t', expectedTables },
+      );
+
+      expect(result.status).toBe('pass');
+      expect(result.details.ordered).toBe(true);
+    });
+
+    it('regression: aggregation queries produce stable verification via multiset comparison and explicit order_by', async () => {
+      const actualPath = resolve(__dirname, '../fixtures/valid_customers.csv');
+      await engine.loadFixture('customers_raw', actualPath, 'csv');
+      // Create aggregated table where DuckDB row emission order is not guaranteed by physical storage
+      await engine.executeTransformation(
+        'customers_agg',
+        'SELECT name, count(*) as cnt FROM customers_raw GROUP BY name',
+      );
+      await engine.executeTransformation(
+        'expected_agg',
+        'SELECT name, count(*) as cnt FROM customers_raw GROUP BY name',
+      );
+      await engine.lockdown();
+
+      const expectedTables = new Map([['expected_agg_path', 'expected_agg']]);
+
+      // 1. Multiset comparison passes regardless of group emission order
+      const resUnordered = await runOutputMatchCheck(
+        {
+          type: 'output_match',
+          expected: 'expected_agg_path',
+          target: 'customers_agg',
+        },
+        { engine, defaultTargetTable: 'customers_agg', expectedTables },
+      );
+      expect(resUnordered.status).toBe('pass');
+
+      // 2. Explicit order_by enforces deterministic ordered comparison on aggregation results
+      const resOrdered = await runOutputMatchCheck(
+        {
+          type: 'output_match',
+          expected: 'expected_agg_path',
+          target: 'customers_agg',
+          ordered: true,
+          order_by: ['name ASC'],
+        },
+        { engine, defaultTargetTable: 'customers_agg', expectedTables },
+      );
+      expect(resOrdered.status).toBe('pass');
+      expect(resOrdered.details.ordered).toBe(true);
     });
   });
 });

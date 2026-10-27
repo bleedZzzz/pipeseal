@@ -49,7 +49,7 @@ importers:
   packages/core:
     dependencies:
       '@duckdb/node-api':
-        specifier: ^2.0.0-r.1
+        specifier: 2.0.0-r.1
         version: 2.0.0-r.1
       js-yaml:
         specifier: ^4.1.0
