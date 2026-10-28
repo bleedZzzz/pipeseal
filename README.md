@@ -17,6 +17,14 @@
 
 <br/>
 
+<p align="center">
+  <img src="assets/readme/demo.gif" width="100%" alt="PipeSeal Deterministic Pipeline Verification Walkthrough" />
+</p>
+
+<p align="center">
+  <sub>🎥 <em>Live execution: DuckDB ephemeral sandbox · 6 deterministic checks in 18ms · SHA-256 evidence · <a href="assets/readme/demo.mp4">Download HD MP4</a></em></sub>
+</p>
+
 </div>
 
 ```text
