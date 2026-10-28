@@ -1,6 +1,6 @@
 {
   "name": "pipeseal-monorepo",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --build --noEmit",
     "format": "prettier --write \"packages/**/*.ts\" \"docs/**/*.md\"",
-    "format:check": "prettier --check \"packages/**/*.ts\" \"docs/**/*.md\""
+    "format:check": "prettier --check \"packages/**/*.ts\" \"docs/**/*.md\"",
+    "setup:mcp": "node scripts/setup-mcp.js"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",

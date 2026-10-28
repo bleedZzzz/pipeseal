@@ -160,14 +160,22 @@ PipeSeal provides a native Model Context Protocol (MCP) server (`@pipeseal/mcp`)
 
 ### Agent Client Configuration
 
-Add PipeSeal to your project's `.agents/mcp_config.json` or client configuration:
+#### For Repository Contributors
+Run the local setup script to generate `.agents/mcp_config.json` with your workspace paths:
+
+```bash
+pnpm run setup:mcp
+```
+
+#### For External Consumer Projects (Published Package)
+Add PipeSeal to your agent's MCP configuration using `npx`:
 
 ```json
 {
   "mcpServers": {
     "pipeseal": {
-      "command": "node",
-      "args": ["packages/mcp/dist/index.js"]
+      "command": "npx",
+      "args": ["-y", "@pipeseal/mcp", "--project-root", "."]
     }
   }
 }

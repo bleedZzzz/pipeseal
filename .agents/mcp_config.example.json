@@ -1,0 +1,13 @@
+{
+  "$comment": "PipeSeal local MCP server configuration template for Antigravity IDE. Run 'pnpm run setup:mcp' to automatically generate a local .agents/mcp_config.json for your environment.",
+  "mcpServers": {
+    "pipeseal": {
+      "command": "node",
+      "args": [
+        "<ABSOLUTE_PATH_TO_PIPE_SEAL>/packages/mcp/dist/index.js",
+        "--project-root",
+        "<ABSOLUTE_PATH_TO_PIPE_SEAL>"
+      ]
+    }
+  }
+}

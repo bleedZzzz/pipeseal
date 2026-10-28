@@ -5,3 +5,4 @@ coverage/
 .DS_Store
 *.log
 MEMORY.md
+.agents/mcp_config.json

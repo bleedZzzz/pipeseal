@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export class PathSecurityError extends Error {
   constructor(
@@ -15,11 +16,61 @@ export interface PathGuardOptions {
   trustedRoot?: string;
 }
 
+function findDefaultProjectRoot(): string {
+  if (process.env.PIPESEAL_PROJECT_ROOT) {
+    return path.resolve(process.env.PIPESEAL_PROJECT_ROOT);
+  }
+  const cwd = process.cwd();
+  if (
+    fs.existsSync(path.join(cwd, "pnpm-workspace.yaml")) ||
+    fs.existsSync(path.join(cwd, ".git")) ||
+    fs.existsSync(path.join(cwd, "pipeseal.verify.yml")) ||
+    fs.existsSync(path.join(cwd, "pipeseal.verify.yaml"))
+  ) {
+    return cwd;
+  }
+
+  // Walk up from cwd looking for a project root (e.g. if spawned inside a project subfolder)
+  try {
+    let current = cwd;
+    while (current && current !== path.dirname(current)) {
+      if (
+        fs.existsSync(path.join(current, "pipeseal.verify.yml")) ||
+        fs.existsSync(path.join(current, "pipeseal.verify.yaml")) ||
+        fs.existsSync(path.join(current, ".git"))
+      ) {
+        return current;
+      }
+      current = path.dirname(current);
+    }
+  } catch {
+    // Continue
+  }
+
+  // If cwd is an external host application directory (e.g. IDE installation folder),
+  // walk up from this module's location only if inside a development checkout
+  try {
+    let dir = path.dirname(fileURLToPath(import.meta.url));
+    while (dir && dir !== path.dirname(dir)) {
+      if (
+        fs.existsSync(path.join(dir, "pnpm-workspace.yaml")) ||
+        fs.existsSync(path.join(dir, ".git"))
+      ) {
+        return dir;
+      }
+      dir = path.dirname(dir);
+    }
+  } catch {
+    // Fall back to cwd
+  }
+  return cwd;
+}
+
 export class PathGuard {
   private readonly trustedRoot: string;
 
   constructor(options: PathGuardOptions = {}) {
-    const rawRoot = options.trustedRoot ?? process.cwd();
+    const rawRoot = options.trustedRoot ?? findDefaultProjectRoot();
     const resolvedRoot = path.resolve(rawRoot);
     if (fs.existsSync(resolvedRoot)) {
       this.trustedRoot = fs.realpathSync(resolvedRoot);

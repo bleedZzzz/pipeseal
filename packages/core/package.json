@@ -1,13 +1,15 @@
 {
   "name": "@pipeseal/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Core engine and verification checks for PipeSeal data pipeline verification",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     ".": {

@@ -149,25 +149,34 @@ pnpm run build
 
 ### Step 2: Configure AI Coding Agents
 
-#### A. Google Antigravity Configuration
+#### Option A: Contributors Working in This Monorepo
 
-In your Antigravity project configuration (e.g. `.agents/mcp_config.json` or Antigravity MCP settings):
+After cloning and building the repository, run the automatic setup script:
+
+```bash
+pnpm run setup:mcp
+```
+
+This generates a local `.agents/mcp_config.json` configured with canonical absolute paths and `--project-root` for your development workspace. (The generated file is excluded from Git to keep local configurations isolated).
+
+You can also manually copy `.agents/mcp_config.example.json` to `.agents/mcp_config.json` and adjust the paths.
+
+#### Option B: External Consumer Projects (Using Published Package)
+
+When using PipeSeal's MCP server in external projects via `npm` or `npx`:
 
 ```json
 {
   "mcpServers": {
     "pipeseal": {
-      "command": "node",
-      "args": ["packages/mcp/dist/index.js"],
-      "env": {}
+      "command": "npx",
+      "args": ["-y", "@pipeseal/mcp", "--project-root", "."]
     }
   }
 }
 ```
 
-#### B. Claude Desktop / Cursor / Cline Configuration
-
-In `claude_desktop_config.json` or your client's MCP configuration file:
+Or when installed locally as a `devDependency` (`npm install -D @pipeseal/mcp`):
 
 ```json
 {
@@ -175,13 +184,25 @@ In `claude_desktop_config.json` or your client's MCP configuration file:
     "pipeseal": {
       "command": "node",
       "args": [
-        "c:/Users/USER/OneDrive/Desktop/pipeseal/packages/mcp/dist/index.js"
-      ],
-      "env": {}
+        "./node_modules/@pipeseal/mcp/dist/index.js",
+        "--project-root",
+        "."
+      ]
     }
   }
 }
 ```
+
+#### Project Root Resolution Precedence
+
+The MCP server determines the project root in the following order:
+
+1. Tool argument: `args.projectRoot`
+2. CLI argument: `--project-root <path>` or `-r <path>`
+3. Environment variable: `PIPESEAL_PROJECT_ROOT`
+4. Root markers in current working directory or ancestors (`pipeseal.verify.yml`, `.git`)
+5. Monorepo root marker (`pnpm-workspace.yaml`)
+6. Current process working directory (`process.cwd()`)
 
 ---
 

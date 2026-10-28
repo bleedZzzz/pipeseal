@@ -157,5 +157,28 @@ describe("PipeSeal MCP — Protocol & Transport", () => {
       await client.close();
       client = null;
     });
+
+    it("shuts down cleanly and idempotently when client closes transport", async () => {
+      const shutdownTransport = new StdioClientTransport({
+        command: "node",
+        args: [mcpBinaryPath],
+        cwd: projectRoot,
+        stderr: "pipe",
+      });
+
+      const shutdownClient = new Client(
+        { name: "shutdown-test-client", version: "1.0.0" },
+        { capabilities: {} },
+      );
+
+      await shutdownClient.connect(shutdownTransport);
+      expect(shutdownClient.getServerVersion()).toBeDefined();
+
+      // Trigger client transport close which sends EOF to server
+      await shutdownClient.close();
+
+      // Verify that repeating close on the client is idempotent and does not throw
+      await expect(shutdownClient.close()).resolves.not.toThrow();
+    });
   });
 });

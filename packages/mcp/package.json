@@ -1,6 +1,6 @@
 {
   "name": "@pipeseal/mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Model Context Protocol (MCP) server for PipeSeal deterministic data pipeline verification",
   "license": "Apache-2.0",
   "type": "module",
@@ -10,7 +10,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
