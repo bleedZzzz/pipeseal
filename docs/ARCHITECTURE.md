@@ -32,8 +32,8 @@
 ```
 @pipeseal/core         — Verification engine, checks, report generation
 @pipeseal/cli          — CLI wrapper around core
-@pipeseal/duckdb       — DuckDB execution adapter
-pipeseal               — Meta-package that installs cli + duckdb (convenience)
+@pipeseal/mcp          — Model Context Protocol (MCP) server for AI coding agents
+pipeseal               — Meta-package that installs cli (convenience)
 ```
 
 ### Monorepo Layout
@@ -46,23 +46,28 @@ pipeseal/
 │   │   │   ├── config/    — Configuration loading and validation
 │   │   │   ├── checks/    — Check implementations
 │   │   │   ├── report/    — Report generation
-│   │   │   ├── engine/    — Execution engine interface
+│   │   │   ├── engine/    — Execution engine interface (DuckDBEngine)
 │   │   │   └── index.ts   — Public API
 │   │   ├── test/
 │   │   └── package.json
-│   ├── cli/               — @pipeseal/cli
+│   ├── cli/               — @pipeseal/cli (pipeseal)
 │   │   ├── src/
 │   │   │   ├── commands/  — CLI commands (verify, init)
 │   │   │   └── index.ts   — Entry point
 │   │   ├── test/
 │   │   └── package.json
-│   └── duckdb/            — @pipeseal/duckdb
+│   └── mcp/               — @pipeseal/mcp
 │       ├── src/
-│       │   └── adapter.ts — DuckDB execution adapter
-│       ├── test/
+│       │   ├── security/  — PathGuard (trusted root validation)
+│       │   ├── tools/     — MCP tool implementations & schemas
+│       │   ├── server.ts  — McpServer factory
+│       │   └── index.ts   — Stdio executable entry point
 │       └── package.json
 ├── examples/
-│   └── basic-csv/         — MVP demonstration
+│   └── basic-csv/         — Demonstration pipeline
+├── test/
+│   ├── mcp/               — MCP protocol, functional, and security tests
+│   └── fixtures/          — Synthetic test fixtures
 ├── docs/
 ├── AGENTS.md
 ├── LICENSE
@@ -249,20 +254,47 @@ interface ExecuteOptions {
 
 ## 8. Future Architecture Extensions
 
-### v0.2: MCP Server
+### v0.2: MCP Agent Integration (@pipeseal/mcp)
 
 ```
-┌─────────────┐     MCP      ┌──────────────┐
-│  AI Agent   │ ◄──────────► │ PipeSeal MCP │
-│  (Claude,   │   Protocol   │   Server     │
-│   Cursor)   │              └──────┬───────┘
-└─────────────┘                     │
-                                    ▼
-                           ┌──────────────┐
-                           │ @pipeseal/   │
-                           │    core      │
-                           └──────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│              AI Coding Agents (Antigravity, Claude, Cursor)     │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ JSON-RPC 2.0 over stdio
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│               PipeSeal MCP Server (@pipeseal/mcp)               │
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │ PathGuard Security Layer (Root containment, symlink guard) │  │
+│  └────────────────────────────┬──────────────────────────────┘  │
+│                               │                                 │
+│  ┌────────────────────────────┴──────────────────────────────┐  │
+│  │ Registered MCP Tools:                                     │  │
+│  │  • pipeseal_verify        ──► verifyPipeline()            │  │
+│  │  • pipeseal_test_sql      ──► DuckDBEngine (isolated)     │  │
+│  │  • pipeseal_inspect_schema──► DuckDBEngine (schema inspect)│  │
+│  │  • pipeseal_diff_output   ──► output_match (diff engine)  │  │
+│  └────────────────────────────┬──────────────────────────────┘  │
+└───────────────────────────────┼─────────────────────────────────┘
+                                │ In-process TypeScript API
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 PipeSeal Core (@pipeseal/core)                  │
+│                                                                 │
+│  - Ephemeral in-memory DuckDB runtime                           │
+│  - Engine API lockdown (enable_external_access = false)         │
+│  - Native query interruption & timeouts                         │
+│  - Standardized JSON evidence reports                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+The MCP package exposes 4 tools that adapt `@pipeseal/core` without duplicating verification logic or assertion algorithms:
+
+1. `pipeseal_verify`: End-to-end pipeline verification against project configuration files.
+2. `pipeseal_test_sql`: Controlled trial transformation of SQL against synthetic fixture tables with static destructive query guards and timeouts.
+3. `pipeseal_inspect_schema`: Extraction of normalized table schemas and row counts without returning full datasets.
+4. `pipeseal_diff_output`: Detailed discrepancy breakdown (missing rows, extra rows, schema differences) for failing output assertions.
 
 ### v0.3: Python Workers
 

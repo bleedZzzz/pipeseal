@@ -1,0 +1,37 @@
+{
+  "name": "@pipeseal/mcp",
+  "version": "0.2.0",
+  "description": "Model Context Protocol (MCP) server for PipeSeal deterministic data pipeline verification",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "pipeseal-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@pipeseal/core": "workspace:*",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pipeseal",
+    "verification",
+    "data-pipeline",
+    "duckdb",
+    "ai-agents"
+  ]
+}

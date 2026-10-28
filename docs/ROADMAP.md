@@ -34,14 +34,18 @@
 
 **Goal:** Enable AI coding agents to verify their own SQL transformations.
 
-| Deliverable                                              | Depends On          |
-| -------------------------------------------------------- | ------------------- |
-| MCP server (`pipeseal mcp serve`)                        | MCP TypeScript SDK  |
-| MCP tools: `verify`, `check_schema`, `compare_output`    | @pipeseal/core      |
-| GitHub Action for CI integration                         | @pipeseal/cli       |
-| dbt adapter (read dbt artifacts, run against dbt models) | dbt manifest format |
-| JSON/Parquet input support                               | @pipeseal/duckdb    |
-| Report schema v1.1 (add MCP context)                     | @pipeseal/core      |
+| Deliverable                                                                                             | Depends On                        | Status                    |
+| :------------------------------------------------------------------------------------------------------ | :-------------------------------- | :------------------------ |
+| MCP server package (`@pipeseal/mcp`, binary `pipeseal-mcp`)                                             | MCP TypeScript SDK (`1.32.2`)     | ✅ Completed              |
+| 4 MCP tools (`pipeseal_verify`, `pipeseal_test_sql`, `pipeseal_inspect_schema`, `pipeseal_diff_output`) | @pipeseal/core                    | ✅ Completed              |
+| Privacy-safe responses (`include_sample_values: false` default)                                         | Privacy & redaction engine        | ✅ Completed              |
+| Path security & sandbox (`PathGuard`)                                                                   | fs realpath canonicalization      | ✅ Completed              |
+| Full MCP test suite (protocol, functional, security, privacy)                                           | Vitest, @modelcontextprotocol/sdk | ✅ Completed              |
+| Antigravity, Claude, and Cursor client documentation (`docs/MCP.md`)                                    | MCP stdio spec                    | ✅ Completed              |
+| GitHub Action for CI integration                                                                        | @pipeseal/cli                     | Planned                   |
+| dbt adapter (read dbt artifacts, run against dbt models)                                                | dbt manifest format               | Deferred (v0.3 candidate) |
+| JSON/Parquet input support                                                                              | @pipeseal/duckdb                  | Planned                   |
+| Report schema v1.1 (add MCP context)                                                                    | @pipeseal/core                    | Planned                   |
 
 ---
 

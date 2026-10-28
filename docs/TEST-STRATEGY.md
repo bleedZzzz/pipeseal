@@ -78,6 +78,33 @@ A single end-to-end test that runs the MVP demonstration:
 
 This test is the acceptance test for the MVP.
 
+### 3.5 MCP Protocol Tests (`test/mcp/protocol.test.ts`)
+
+| Test Target      | What It Verifies                                                                                                                         |
+| :--------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| Tool Discovery   | Server exposes all 4 tools (`pipeseal_verify`, `pipeseal_test_sql`, `pipeseal_inspect_schema`, `pipeseal_diff_output`) with JSON schemas |
+| Input Validation | Invalid parameter types return structured error categories (`INVALID_INPUT`) without crashing                                            |
+| Stdio Purity     | External child process over stdio emits zero non-JSON-RPC lines on stdout during execution                                               |
+
+### 3.6 MCP Functional Tests (`test/mcp/functional.test.ts`)
+
+| Test Target               | What It Verifies                                                                                                                                                                       |
+| :------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pipeseal_verify`         | Returns passing verification (`status: PASS`, exit code 0) for valid pipeline; returns failing verification (`status: FAIL`, exit code 1) for invalid fixtures without protocol errors |
+| `pipeseal_test_sql`       | Executes candidate SQL against synthetic fixture files; accurately reports passing and failing assertions (`expect_columns`, `row_count`, `custom_sql`)                                |
+| `pipeseal_inspect_schema` | Returns normalized schema (`column_name`, `data_type`, `nullable`) and row count for standalone fixtures or config tables without returning whole datasets                             |
+| `pipeseal_diff_output`    | Identifies exact missing rows, extra rows, and schema differences with bounded sample failures for multiset and ordered comparisons                                                    |
+
+### 3.7 MCP Security Regression Tests (`test/mcp/security.test.ts`)
+
+| Test Target           | What It Verifies                                                                                                |
+| :-------------------- | :-------------------------------------------------------------------------------------------------------------- |
+| Path Traversal        | Rejects absolute paths outside trusted root, `../` escapes, and null byte injections with `PATH_SECURITY_ERROR` |
+| Destructive SQL       | Blocks `ATTACH`, `DETACH`, `COPY TO`, `INSTALL`, `LOAD`, and `SET` commands before execution                    |
+| External Access       | Blocks file reading table functions (`read_csv`, `read_parquet`) and network access during query execution      |
+| Native Cancellation   | Enforces query cancellation via `connection.interrupt()` on timeout without crashing Node.js                    |
+| Information Redaction | Confirms environment variables, credentials, and full host filepaths are not leaked in error diagnostics        |
+
 ---
 
 ## 4. Fixture Strategy
@@ -133,9 +160,8 @@ PipeSeal measures cold execution latency rather than warm cached loops:
 
 ---
 
-## 7. What Is NOT in Scope for v0.1.0
+## 7. Evolution & Scope Boundaries
 
-- Remote data warehouse adapters (Snowflake, BigQuery, Databricks).
-- MCP protocol server implementation.
-- Multi-language Python worker sandbox.
-- Multi-tenant adversary isolation (in-process DuckDB does not defend against arbitrary hostile native C++ exploits).
+- **v0.1.0 MVP:** Delivered single-node in-memory DuckDB verification, 6 core check types, CLI, and JSON reports.
+- **v0.2.0 MCP Integration:** Implemented `@pipeseal/mcp` with 4 agent tools (`pipeseal_verify`, `pipeseal_test_sql`, `pipeseal_inspect_schema`, `pipeseal_diff_output`), path sandboxing, and protocol test suite.
+- **Future Scope (v0.3.0+):** Remote data warehouse adapters (Snowflake, BigQuery), Python worker sandbox, and containerized multi-tenant isolation.

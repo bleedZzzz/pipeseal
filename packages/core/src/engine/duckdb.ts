@@ -298,6 +298,8 @@ export class DuckDBEngine implements ExecutionEngine {
       return await Promise.race([promise, timeoutPromise]);
     } catch (err) {
       if (didTimeout) {
+        // Guarantee native DuckDB thread settles interrupt before connection can be closed
+        await promise.catch(() => {});
         throw new ExecutionError(
           `${operationDescription} exceeded configured timeout of ${timeoutMs}ms (native execution interrupted)`,
           err,

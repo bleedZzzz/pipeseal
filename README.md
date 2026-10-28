@@ -145,11 +145,47 @@ checks:
 
 ---
 
+## Model Context Protocol (MCP) Integration (v0.2.0)
+
+PipeSeal provides a native Model Context Protocol (MCP) server (`@pipeseal/mcp`) communicating over the `stdio` transport. This allows AI coding agents (such as Google Antigravity, Claude Code, Cursor, and Windsurf) to test candidate SQL transformations, inspect schemas, and diagnose pipeline discrepancies deterministically in their local development loop.
+
+### Available MCP Tools
+
+| Tool | Purpose | Core Engine Mapping |
+| :--- | :--- | :--- |
+| `pipeseal_verify` | Run full pipeline verification against `pipeseal.verify.yml` and return structured evidence. | Calls `verifyPipeline()` |
+| `pipeseal_test_sql` | Safely test candidate SQL transformations against declared synthetic fixtures. | Ephemeral `DuckDBEngine` |
+| `pipeseal_inspect_schema` | Inspect column names and normalized SQL types without exposing raw datasets. | DuckDB catalog inspection |
+| `pipeseal_diff_output` | Diagnose failing `output_match` assertions (missing rows, extra rows, schema mismatches). | Core `output_match` diff engine |
+
+### Agent Client Configuration
+
+Add PipeSeal to your project's `.agents/mcp_config.json` or client configuration:
+
+```json
+{
+  "mcpServers": {
+    "pipeseal": {
+      "command": "node",
+      "args": ["packages/mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+*Privacy note: By default, PipeSeal MCP tools omit raw dataset row values (`include_sample_values: false`) to prevent context window leakage of sensitive customer records.*
+
+For detailed protocol specifications, error codes, and security policies, see the [MCP Integration Guide](docs/MCP.md).
+
+---
+
 ## Documentation Index
 
 - [Product Requirements Document (PRD)](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/PRD.md)
 - [System Architecture](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/ARCHITECTURE.md)
+- [Model Context Protocol (MCP) Guide](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/MCP.md)
 - [Threat Model & Security Boundary](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/THREAT-MODEL.md)
 - [Test Strategy & Verification Fixtures](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/TEST-STRATEGY.md)
 - [Product Roadmap](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/ROADMAP.md)
 - [Architectural Decisions (ADRs)](file:///c:/Users/USER/OneDrive/Desktop/pipeseal/docs/decisions)
+

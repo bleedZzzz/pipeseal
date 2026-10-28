@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pipeseal": {
+      "command": "node",
+      "args": ["packages/mcp/dist/index.js"]
+    }
+  }
+}

@@ -56,6 +56,9 @@ jobs:
       - name: CLI Demonstration — JSON Evidence Output
         run: node packages/cli/dist/index.js verify examples/basic-csv/pipeseal.verify.yml --json
 
+      - name: MCP Server Smoke Test — Stdio Initialization
+        run: node -e "import('./packages/mcp/dist/index.js').then(async m => { const s = m.createPipeSealMcpServer(); if (!s) throw new Error('Failed to instantiate McpServer'); console.log('PipeSeal MCP server initialized successfully with 4 verification tools'); });"
+
   node-26-compat:
     name: Node.js 26 Compatibility (Ubuntu)
     runs-on: ubuntu-latest

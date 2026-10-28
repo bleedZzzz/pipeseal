@@ -32,6 +32,7 @@ export {
   type CheckStatus,
   type CheckContext,
 } from "./checks/types.js";
+export { runChecks } from "./checks/runner.js";
 
 export {
   type ColumnMetadata,
@@ -40,6 +41,7 @@ export {
   type QueryResult,
   type ExecutionEngine,
 } from "./engine/types.js";
+export { DuckDBEngine, type DuckDBEngineOptions } from "./engine/duckdb.js";
 
 export {
   PipeSealError,
